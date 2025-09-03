@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HBD Sayangggg</title>
+  <!-- Tailwind (no build) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Pixel fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+  <!-- React UMD + Babel (compile JSX in the browser) -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    :root { --screen:#0a2d0a; --glow:#35ff6a; --shell:#d7dad2; --shell2:#c0c6bc; --bezel:#3b4a32; }
+    .scanlines { background-image: repeating-linear-gradient(0deg, transparent 0 2px, #000 2px 3px); }
+    .press-font { font-family: 'Press Start 2P', monospace; }
+    .vt-font { font-family: 'VT323', monospace; }
+    .tilt { transform: perspective(800px) rotateX(1.5deg); }
+    .no-touch-scroll { touch-action: none; }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-indigo-950 via-purple-900 to-slate-900 text-emerald-200">
+  <!-- Audio latar: autoplay, loop, tanpa controls -->
+  <audio id="bg-audio" src="./assets/musik2.mp3" autoplay playsinline loop preload="metadata"></audio>
+
+  <div id="root"></div>
+
+  <script type="text/babel" data-presets="react">
+    const { useState, useEffect, useRef, useMemo } = React;
+
+    // ================== CONFIG ==================
+    const CONFIG = {
+      siteTitle: 'HBD Sayangggg',
+      name: 'Khansaasaa',
+      author: 'Dapp',
+      colors: { shell:'#d7dad2', shell2:'#c0c6bc', bezel:'#3b4a32', screen:'#0a2d0a', glow:'#35ff6a' },
+      messageParagraphs: [
+        'Sayang happy birthday yoooooo🎉',
+        'Maaf kalo aku agak sibuk belakangan ko sayang soalny lagi latsarr sayangkuuuuuuu.',
+        'Semoga selalu bahagia yo sayang, sehat terus, panjang umur, semoga apo yang sayang cita citakan tercapai segalonyooo  💚 aamiiinn',
+        'kau selalu ado di hati aku sayang , love youuu',
+      ],
+      // ====== Musik latar ======
+      bgMusic: {
+        title: 'Cynderella',
+        artist: 'Paul Hartohap',
+        src: './assets/musik2.mp3'
+      },
+      // ====== Galeri ======
+      gallery: [
+        { src: './assets/foto-1.jpeg', note: 'masih ingek iko dk sayangg  haha foto di studio dekat dprd tu ' },
+        { src: './assets/foto-2.jpeg', note: 'waktu di ls wkwkwk ' },
+        { src: './assets/foto-3.jpeg', note: 'ndk di laven rice lagii yang? haha ' },
+        { src: './assets/foto-4.jpeg', note: 'cantiknyooooo ' },
+        { src: './assets/foto-5.jpeg', note: 'semoga selalu bisa makan ramen kek kau yo sayang' },
+        { src: './assets/foto-6.jpeg', note: 'makan yoshinoya jugooo' },
+        { src: './assets/foto-7.jpeg', note: 'Love youu sayanggg' },
+        { src: './assets/foto-8.jpeg', note: 'Berhasil kan aku ngerompak hati kau sayang hehehehe' },
+        { src: './assets/foto-9.jpeg', note: 'Semoga selalu bisa bareng aku yo sayanggg' },
+        { src: './assets/foto-10.jpeg', note: 'makan gacoan lagiii yangg bisa samo samo terus sayangku' },
+        { src: './assets/foto-11.jpeg', note: 'ayok main bwoling sayangkuuu' },
+        { src: './assets/foto-12.jpeg', note: 'bowling lagiii sayangg' },
+        { src: './assets/foto-13.jpeg', note: 'lebaran temu lagi' },
+        { src: './assets/foto-14.jpeg', note: 'dak pernah ilang cantik kauu' },
+        { src: './assets/foto-15.jpeg', note: 'ingat dk iko pas am nembak kau hehehe' },
+
+      ],
+      video: {
+        src: './assets/video-1.mp4',
+        poster: 'https://images.unsplash.com/photo-1518806118471-f28b20a1d79d?q=80&w=1200&auto=format&fit=crop',
+      },
+      autoplayHint: 'Kalau musik belum otomatis, tap layar snyoo sayang🎵',
+    };
+
+    // ===== hooks =====
+    function useInterval(cb, delay){
+      const saved = useRef(()=>{}); useEffect(()=>{saved.current = cb},[cb]);
+      useEffect(()=>{ if(delay==null) return; const id=setInterval(()=>saved.current(), delay); return ()=>clearInterval(id) },[delay]);
+    }
+    function useTypewriter(text, speed=24){ const [out,setOut]=useState(''); useEffect(()=>{ setOut(''); let i=0; const id=setInterval(()=>{ i++; setOut(text.slice(0,i)); if(i>=text.length) clearInterval(id); }, speed); return ()=>clearInterval(id); },[text,speed]); return out; }
+
+    const DotMatrix = () => (
+      <div className="absolute -top-2 left-1/2 -translate-x-1/2 text-[10px] tracking-[0.2em] text-emerald-300/70 select-none press-font">DOT MATRIX WITH STEREO SOUND</div>
+    );
+    const Power = ({on}) => (
+      <div className="absolute -left-3 top-2 flex items-center gap-1">
+        <div className={`h-2.5 w-2.5 rounded-full ${on? 'bg-red-500 animate-pulse':'bg-zinc-400'}`}></div>
+        <span className="text-[10px] press-font text-zinc-500">POWER</span>
+      </div>
+    );
+    const Battery = () => (<div className="absolute -right-3 top-2 text-[10px] press-font text-zinc-500">BATTERY</div>);
+
+    function App(){
+      const [phase, setPhase] = useState('loading'); // loading | home | message | gallery | tetris
+      const [progress, setProgress] = useState(0);
+      const [msgIndex, setMsgIndex] = useState(0);
+      const [printed, setPrinted] = useState(0);
+      const [loveModal, setLoveModal] = useState(false);
+      const [showAutoplayHint, setShowAutoplayHint] = useState(false);
+
+      useEffect(()=>{ document.title = CONFIG.siteTitle || document.title; },[]);
+      useInterval(()=> setProgress(p=> Math.min(100, p + Math.floor(Math.random()*13)+4)), phase==='loading'?260:null);
+      useEffect(()=>{ if(progress>=100) setTimeout(()=> setPhase('home'), 600); },[progress]);
+
+      // Paksa musik auto-play; jika diblokir, play saat interaksi pertama
+      useEffect(()=>{
+        const a = document.getElementById('bg-audio');
+        if(!a) return;
+        a.muted = false; a.volume = 1;
+        const tryPlay = ()=> a.play().catch(()=> setShowAutoplayHint(true));
+        tryPlay();
+        const onInteract = ()=>{ tryPlay(); };
+        window.addEventListener('pointerdown', onInteract, { once:true });
+        window.addEventListener('keydown', onInteract, { once:true });
+        window.addEventListener('touchstart', onInteract, { once:true });
+        return ()=>{
+          window.removeEventListener('pointerdown', onInteract);
+          window.removeEventListener('keydown', onInteract);
+          window.removeEventListener('touchstart', onInteract);
+        };
+      },[]);
+
+      return (
+        <div className="min-h-screen w-full relative">
+          <AudioToggle/>
+          <div className="pointer-events-none fixed inset-0 opacity-[0.08] mix-blend-soft-light scanlines" />
+
+          {phase==='loading' && <Loading progress={progress} />}
+
+          {phase==='home' && (
+            <Shell>
+              <Screen title={'Happy Birthday!'} subtitle={'Press Start Button'}>
+                <div className="flex flex-col items-center gap-5">
+                  <LogoBadge/>
+                  <button onClick={()=>{ const a=document.getElementById('bg-audio'); a&&a.play().catch(()=>{}); setPhase('message'); }} className="px-5 py-3 bg-emerald-500 hover:bg-emerald-400 text-black rounded-md press-font text-xs shadow">START</button>
+                  {showAutoplayHint && <div className="press-font text-[10px] text-amber-300">{CONFIG.autoplayHint}</div>}
+                  <div className="grid grid-cols-3 gap-3 w-full">
+                    <MenuButton color="blue" onClick={()=>setPhase('message')}>MESSAGE</MenuButton>
+                    <MenuButton color="red" onClick={()=>setPhase('gallery')}>GALLERY</MenuButton>
+                    <MenuButton color="green" onClick={()=>setPhase('tetris')}>TETRIS</MenuButton>
+                  </div>
+                </div>
+              </Screen>
+            </Shell>
+          )}
+
+          {phase==='message' && (
+            <Shell>
+              <Screen title={'Message'}>
+                <Message paragraphs={CONFIG.messageParagraphs} index={msgIndex} />
+                <div className="mt-4 flex gap-3">
+                  <SmallBtn onClick={()=>setPhase('home')} variant="danger">KEMBALI</SmallBtn>
+                  {msgIndex < CONFIG.messageParagraphs.length-1 ? (
+                    <SmallBtn onClick={()=>setMsgIndex(i=>i+1)} variant="ok">SELANJUTNYA</SmallBtn>
+                  ) : (
+                    <SmallBtn onClick={()=>setPhase('gallery')} variant="ok">SELANJUTNYA</SmallBtn>
+                  )}
+                </div>
+              </Screen>
+            </Shell>
+          )}
+
+          {phase==='gallery' && (
+            <Shell>
+              <Screen title={'Gallery'}>
+                <Photobox images={CONFIG.gallery} printed={printed} setPrinted={setPrinted} video={CONFIG.video} />
+                <div className="mt-4 flex gap-3">
+                  <SmallBtn onClick={()=>setPhase('message')} variant="danger">KEMBALI</SmallBtn>
+                  <SmallBtn onClick={()=>setPhase('tetris')} variant="ok">LANJUT TETRIS</SmallBtn>
+                </div>
+              </Screen>
+            </Shell>
+          )}
+
+          {phase==='tetris' && (
+            <Shell>
+              <Screen title={'Yang kalahin tetrisnyo hahah'}>
+                <Tetris onGameOver={()=>setLoveModal(true)} />
+                <div className="mt-4 flex gap-3">
+                  <SmallBtn onClick={()=>setPhase('gallery')} variant="danger">KEMBALI</SmallBtn>
+                </div>
+              </Screen>
+            </Shell>
+          )}
+
+          {loveModal && (
+            <div className="fixed inset-0 bg-black/70 grid place-items-center z-50">
+              <div className="border-4 border-yellow-400 rounded-xl p-6 w-[min(92vw,420px)] bg-emerald-950/90 text-emerald-200 shadow-2xl">
+                <div className="press-font text-yellow-300 text-lg mb-3 text-center">ingat sayangkuu</div>
+                <p className="vt-font text-xl leading-6 text-center">
+                  walaupun kau  kalah, tapi kau  selalu menang yangg di hati aku, HEHE (¬‿¬)<br/>
+                  <span className="press-font text-pink-400">I LOVE YOU &lt;3</span>
+                </p>
+                <div className="mt-4 text-center">
+                  <SmallBtn onClick={()=>setLoveModal(false)} variant="ok">OK</SmallBtn>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="fixed bottom-3 left-0 right-0 text-center text-[10px] text-emerald-200/70 press-font">Made with ❤ by {CONFIG.author} for {CONFIG.name}</div>
+        </div>
+      );
+    }
+
+    // ===== Floating MUTE/UNMUTE toggle =====
+    function AudioToggle(){
+      const [muted, setMuted] = useState(false);
+      useEffect(()=>{
+        const a = document.getElementById('bg-audio');
+        if(!a) return; const sync = ()=> setMuted(a.muted || a.volume===0);
+        sync(); a.addEventListener('volumechange', sync); a.addEventListener('play', sync);
+        return ()=>{ a.removeEventListener('volumechange', sync); a.removeEventListener('play', sync); };
+      },[]);
+      function toggle(){ const a=document.getElementById('bg-audio'); if(!a) return; a.muted=!a.muted; if(!a.muted){ a.volume=1; a.play().catch(()=>{}); } setMuted(a.muted); }
+      return (
+        <button onClick={toggle} className="fixed top-3 right-3 z-50 px-3 py-2 rounded-lg bg-yellow-400 text-black press-font text-[10px] shadow">{muted ? '🔊 UNMUTE' : '🔇 MUTE'}</button>
+      );
+    }
+
+    // ================== SHELL & SCREEN ==================
+    function Shell({children}){
+      return (
+        <div className="min-h-screen flex items-center justify-center p-4 md:p-6">
+          <div className="relative w-[min(95vw,460px)] rounded-[26px] p-5 md:p-6 tilt"
+               style={{ background: `linear-gradient(145deg, ${CONFIG.colors.shell} 0%, ${CONFIG.colors.shell2} 60%)`, boxShadow: '0 24px 60px rgba(0,0,0,.45), inset 0 4px 8px rgba(255,255,255,.35)'}}>
+            {/* Top label */}
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2 press-font text-[10px] text-zinc-700">Nintendo GAME BOY</div>
+            {/* Screws */}
+            {[[-10,-10],[10,-10],[-10,10],[10,10]].map((p,i)=> (
+              <div key={i} className="absolute h-3 w-3 rounded-full bg-zinc-500/70" style={{ top: i<2? 6: 'auto', bottom: i>=2? 6:'auto', left: i%2? 'auto': 6, right: i%2? 6:'auto', boxShadow:'inset 0 1px 2px rgba(0,0,0,.6)'}} />
+            ))}
+            {/* Speaker diagonal */}
+            <div className="absolute bottom-5 right-6 rotate-[-22deg] grid grid-cols-3 gap-1 opacity-80">
+              {Array.from({length:15}).map((_,i)=> <div key={i} className="h-1.5 w-1.5 rounded-full bg-zinc-700" />)}
+            </div>
+            {/* D-pad */}
+            <div className="absolute bottom-20 left-7"><DPad/></div>
+            {/* A/B */}
+            <div className="absolute bottom-20 right-8 flex gap-4 rotate-[-12deg]"><RoundBtn label="B"/><RoundBtn label="A"/></div>
+            {/* Select/Start */}
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-5"><PillBtn>SELECT</PillBtn><PillBtn>START</PillBtn></div>
+            {children}
+          </div>
+        </div>
+      );
+    }
+
+    function Screen({title, subtitle, children}){
+      return (
+        <div className="relative">
+          <div className="relative rounded-xl border-4 p-3 shadow-inner" style={{ borderColor: CONFIG.colors.bezel, background:'#1a3b1a'}}>
+            <DotMatrix/>
+            <Power on/>
+            <Battery/>
+            <div className="rounded-lg p-4 min-h-[380px] md:min-h-[420px] flex flex-col scanlines" style={{background: CONFIG.colors.screen, boxShadow:'inset 0 0 50px rgba(53,255,106,.25)', backgroundImage:'radial-gradient(ellipse at 50% -20%, rgba(53,255,106,.15), transparent 60%)'}}>
+              <h2 className="whitespace-pre-line press-font text-emerald-300 text-lg leading-6 text-center">{title}</h2>
+              {subtitle && <div className="mt-1 text-center text-yellow-300 press-font text-[10px] animate-pulse">{subtitle}</div>}
+              <div className="mt-3 flex-1">{children}</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function LogoBadge(){ return (<div className="press-font text-[10px] text-pink-300 bg-pink-500/10 border border-pink-400/40 rounded px-2 py-1">HBD Sayangggg</div>); }
+
+    function MenuButton({color='blue', onClick, children}){
+      const map={blue:'bg-blue-500 hover:bg-blue-400',red:'bg-red-500 hover:bg-red-400',green:'bg-green-500 hover:bg-green-400',purple:'bg-purple-500 hover:bg-purple-400'}
+      return <button onClick={onClick} className={`${map[color]} text-white rounded-md py-3 text-xs press-font shadow-[0_3px_0_rgba(0,0,0,.6)]`}>{children}</button>
+    }
+
+    function DPad(){
+      return (
+        <div className="relative">
+          <div className="h-24 w-8 bg-zinc-800 rounded-md shadow-inner" />
+          <div className="h-8 w-24 bg-zinc-800 rounded-md shadow-inner absolute -left-[32px] top-[32px]" />
+          {[[2,10],[42,10],[22,-6],[22,26]].map(([l,t],i)=> (
+            <div key={i} className="h-3 w-3 bg-zinc-700 rounded absolute" style={{left:l, top:t}} />
+          ))}
+        </div>
+      );
+    }
+
+    const RoundBtn = ({label}) => (<div className="h-12 w-12 rounded-full bg-red-500 shadow-[inset_0_-8px_0_rgba(0,0,0,.3)] grid place-items-center text-white press-font text-xs">{label}</div>);
+    const PillBtn = ({children}) => (<div className="px-4 py-1 rounded-full bg-zinc-700/90 text-[9px] text-white press-font tracking-wider">{children}</div>);
+    function SmallBtn({children,onClick,variant='ok'}){ const v={ok:'bg-green-500 hover:bg-green-400',danger:'bg-red-500 hover:bg-red-400'}; return <button onClick={onClick} className={`px-4 py-2 rounded-md press-font text-xs text-white ${v[variant]}`}>{children}</button> }
+
+    // ================== SCREENS ==================
+    function Loading({progress}){
+      return (
+        <div className="flex items-center justify-center h-screen">
+          <div className="border border-emerald-400/60 rounded-xl p-6 w-[min(92vw,520px)] bg-black/50 shadow-2xl">
+            <div className="press-font text-emerald-300 text-center text-xl mb-4">Dapaaa</div>
+            <div className="text-emerald-300 font-mono text-sm mb-4">&gt; PREPARING BIRTHDAY SURPRISE…</div>
+            <div className="h-4 rounded bg-emerald-900/40 overflow-hidden"><div className="h-full bg-gradient-to-r from-emerald-300 to-emerald-500" style={{width:progress+'%'}}></div></div>
+            <div className="mt-2 text-right text-xs text-emerald-300 font-mono">{progress}%</div>
+            <div className="mt-4 text-center press-font text-amber-300">SMILE!</div>
+          </div>
+        </div>
+      );
+    }
+
+    function Message({paragraphs, index}){
+      const text = paragraphs[index] || '';
+      const typed = useTypewriter(text, 18);
+      return (
+        <div className="border-2 border-emerald-400/60 rounded-md p-3 bg-black/30 min-h-[240px]">
+          <div className="vt-font text-emerald-200 text-xl leading-6 whitespace-pre-wrap">{typed}</div>
+        </div>
+      );
+    }
+
+    function Photobox({images, printed, setPrinted, video}){
+      const [printing, setPrinting] = useState(false);
+      const [photoModal, setPhotoModal] = useState(null); // {src, note}
+      const [muted, setMuted] = useState(true);
+
+      function startPrint(){ if(printing) return; setPrinting(true); setPrinted(0); }
+      useInterval(()=>{ if(!printing) return; setPrinted(n=>{ if(n>=images.length) return n; const next=n+1; if(next>=images.length) setPrinting(false); return next; }); }, printing?1000:null);
+      const pct = Math.min(100, Math.round((printed / images.length) * 100));
+
+      // Video tidak mem-pause musik latar, biarkan selalu muted agar musik dominan
+      useEffect(()=>{
+        const v = document.getElementById('gallery-video');
+        if(!v) return;
+        v.muted = true;
+        v.play().catch(()=>{});
+      }, []);
+
+      function toggleMute(){
+        const v = document.getElementById('gallery-video');
+        if(!v) return; v.muted = !v.muted; setMuted(v.muted);
+        if(v.paused) v.play().catch(()=>{});
+      }
+
+      return (
+        <div>
+          <div className="rounded-md border-2 border-yellow-500 bg-zinc-900/70 p-3">
+            <div className="flex items-center justify-between text-emerald-300 press-font text-xs"><span>HEYtml PHOTOBOX</span><span className="text-[10px]">READY</span></div>
+            <div className="mt-2 h-48 bg-slate-900/80 grid place-items-center rounded">
+              {!printed ? (
+                <button onClick={startPrint} className="px-4 py-2 rounded bg-red-500 hover:bg-red-400 text-white press-font text-xs">MULAI CETAK</button>
+              ) : (
+                <div className="text-center space-y-2">
+                  <div className="text-yellow-300 press-font text-xs">Mencetak foto {Math.min(printed, images.length)} dari {images.length}… ({pct}%)</div>
+                  <div className="h-2 bg-black/50 rounded overflow-hidden w-64 mx-auto"><div className="h-full bg-gradient-to-r from-yellow-300 to-amber-500" style={{width:pct+'%'}}></div></div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {images.slice(0, printed).map((img,i)=> (
+              <button key={i} className="relative bg-black/40 rounded border border-emerald-400/30 overflow-hidden text-left" onClick={()=> setPhotoModal(img)}>
+                <img src={img.src} alt={`print-${i}`} className="w-full h-40 object-cover" style={{ filter: 'grayscale(100%) contrast(120%) sepia(40%) hue-rotate(60deg) saturate(180%) brightness(1.05)', imageRendering: 'pixelated' }} />
+                <div className="absolute bottom-1 right-1 text-[9px] px-1 py-0.5 bg-yellow-400 text-black press-font rounded">#{i+1}</div>
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-3 relative">
+            <video id="gallery-video" className="w-full rounded border-2 border-emerald-400/60" src={video.src} poster={video.poster} autoPlay muted playsInline loop preload="auto" controls></video>
+            <button className="absolute bottom-2 right-2 px-2 py-1 bg-emerald-700/80 text-white rounded press-font text-[10px]" onClick={toggleMute}>{muted? 'UNMUTE VIDEO':'MUTE VIDEO'}</button>
+          </div>
+
+          {photoModal && (
+            <div className="fixed inset-0 bg-black/70 grid place-items-center z-50 p-4" onClick={()=> setPhotoModal(null)}>
+              <div className="w-[min(92vw,520px)] bg-emerald-950/95 border-2 border-emerald-400/60 rounded-lg p-3" onClick={(e)=> e.stopPropagation()}>
+                <img src={photoModal.src} alt="preview" className="w-full max-h-[50vh] object-cover mb-2 rounded" style={{ filter: 'grayscale(100%) contrast(120%) sepia(40%) hue-rotate(60deg) saturate(180%) brightness(1.05)', imageRendering: 'pixelated' }} />
+                <div className="vt-font text-emerald-100 text-lg">{photoModal.note}</div>
+                <div className="mt-3 text-right"><SmallBtn onClick={()=> setPhotoModal(null)} variant="ok">TUTUP</SmallBtn></div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ================== TETRIS (mobile-friendly, board pendek) ==================
+    const COLS=10, ROWS=16; // pendek
+    const SHAPES={ I:[[1,1,1,1]], J:[[1,0,0],[1,1,1]], L:[[0,0,1],[1,1,1]], O:[[1,1],[1,1]], S:[[0,1,1],[1,1,0]], T:[[0,1,0],[1,1,1]], Z:[[1,1,0],[0,1,1]], };
+    const COLORS={0:'bg-slate-800/60', 1:'bg-cyan-400', 2:'bg-emerald-400',3:'bg-amber-400',4:'bg-pink-400',5:'bg-purple-400',6:'bg-blue-400',7:'bg-red-400'};
+    function randomPiece(){ const keys=Object.keys(SHAPES); const k=keys[Math.floor(Math.random()*keys.length)]; return { m: SHAPES[k].map(r=>[...r]), x: Math.floor(COLS/2)-2, y: 0, c: Math.floor(Math.random()*6)+2 }; }
+    const rotate = (m)=> m[0].map((_,i)=> m.map(r=>r[i]).reverse());
+
+    function Tetris({onGameOver}){
+      const emptyGrid = useMemo(()=>Array.from({length:ROWS},()=>Array(COLS).fill(0)),[]);
+      const [grid, setGrid]=useState(emptyGrid);
+      const [piece, setPiece]=useState(randomPiece());
+      const [score, setScore]=useState(0);
+      const [level, setLevel]=useState(1);
+      const [running,setRunning]=useState(true);
+      const holdIdsRef = useRef(new Set());
+
+      const isMobile = (typeof matchMedia!=='undefined' && matchMedia('(pointer: coarse)').matches) || ('ontouchstart' in window);
+
+      function collide(px,py,pm){ for(let y=0;y<pm.length;y++) for(let x=0;x<pm[0].length;x++){ if(pm[y][x]){ const nx=px+x, ny=py+y; if(nx<0||nx>=COLS||ny>=ROWS) return true; if(ny>=0 && grid[ny][nx]) return true; } } return false; }
+      function merge(){ const g=grid.map(r=>[...r]); piece.m.forEach((row,y)=> row.forEach((v,x)=>{ if(v && piece.y+y>=0) g[piece.y+y][piece.x+x] = piece.c; })); let cleared=0; for(let y=ROWS-1;y>=0;y--){ if(g[y].every(v=>v!==0)){ g.splice(y,1); g.unshift(Array(COLS).fill(0)); cleared++; y++; } } if(cleared){ setScore(s=>s+cleared*100); setLevel(l=> l + (cleared>=2?1:0)); } setGrid(g); }
+
+      const baseSpeed = isMobile ? 800 : 650;
+      useInterval(()=>{ if(!running) return; const ny=piece.y+1; if(collide(piece.x,ny,piece.m)){
+        if(piece.y<=0){ setRunning(false); clearAllHolds(); onGameOver?.(); return; }
+        merge(); setPiece(randomPiece());
+      } else setPiece(p=>({...p,y:ny})); }, baseSpeed - Math.min(500,(level-1)*40));
+
+      useEffect(()=>{ function onKey(e){ if(!running) return; if(['ArrowLeft','ArrowRight','ArrowDown','ArrowUp',' '].includes(e.key)) e.preventDefault(); if(e.key==='ArrowLeft' && !collide(piece.x-1,piece.y,piece.m)) setPiece(p=>({...p,x:p.x-1})); if(e.key==='ArrowRight' && !collide(piece.x+1,piece.y,piece.m)) setPiece(p=>({...p,x:p.x+1})); if(e.key==='ArrowDown' && !collide(piece.x,piece.y+1,piece.m)) setPiece(p=>({...p,y:p.y+1})); if(e.key==='ArrowUp'){ const rm=rotate(piece.m); if(!collide(piece.x,piece.y,rm)) setPiece(p=>({...p,m:rm})); } if(e.key===' '){ let ny=piece.y; while(!collide(piece.x,ny+1,piece.m)) ny++; setPiece(p=>({...p,y:ny})); } } window.addEventListener('keydown', onKey); return ()=> window.removeEventListener('keydown', onKey); }, [piece, running]);
+
+      const view = useMemo(()=>{ const temp=grid.map(r=>[...r]); piece.m.forEach((row,y)=> row.forEach((v,x)=>{ if(v && piece.y+y>=0) temp[piece.y+y][piece.x+x]=piece.c; })); return temp; },[grid,piece]);
+
+      const startRef = useRef({x:0,y:0});
+      function onTouchStart(e){ if(!running) return; const t=e.touches?.[0]; if(!t) return; startRef.current={x:t.clientX,y:t.clientY}; }
+      function onTouchEnd(e){ if(!running) return; const t=e.changedTouches?.[0]; if(!t) return; const dx=t.clientX-startRef.current.x; const dy=t.clientY-startRef.current.y; const ax=Math.abs(dx), ay=Math.abs(dy); const TH=24; if(ax<TH && ay<TH){ const rm=rotate(piece.m); if(!collide(piece.x,piece.y,rm)) setPiece(p=>({...p,m:rm})); } else if(ax>ay){ if(dx>0) { if(!collide(piece.x+1,piece.y,piece.m)) setPiece(p=>({...p,x:p.x+1})); } else { if(!collide(piece.x-1,piece.y,piece.m)) setPiece(p=>({...p,x:p.x-1})); } } else { if(dy>0){ if(!collide(piece.x,piece.y+1,piece.m)) setPiece(p=>({...p,y:p.y+1})); } } }
+
+      function hold(fn){ let id; const start=(e)=>{ e.preventDefault(); if(!running) return; fn(); id=setInterval(()=>{ if(!running){ clearInterval(id); return; } fn(); }, 160); holdIdsRef.current.add(id); }; const stop=()=>{ if(id){ clearInterval(id); holdIdsRef.current.delete(id); } }; return { onPointerDown:start, onPointerUp:stop, onPointerCancel:stop, onPointerLeave:stop } }
+      function clearAllHolds(){ holdIdsRef.current.forEach((id)=> clearInterval(id)); holdIdsRef.current.clear(); }
+
+      const goLeft = ()=>{ if(!running) return; if(!collide(piece.x-1,piece.y,piece.m)) setPiece(p=>({...p,x:p.x-1})); };
+      const goRight = ()=>{ if(!running) return; if(!collide(piece.x+1,piece.y,piece.m)) setPiece(p=>({...p,x:p.x+1})); };
+      const goDown = ()=>{ if(!running) return; if(!collide(piece.x,piece.y+1,piece.m)) setPiece(p=>({...p,y:p.y+1})); };
+      const rotateP = ()=>{ if(!running) return; const rm=rotate(piece.m); if(!collide(piece.x,piece.y,rm)) setPiece(p=>({...p,m:rm})); };
+
+      const cellCls = 'h-3 w-3 sm:h-4 sm:w-4';
+
+      return (
+        <div className="relative">
+          <div className="flex items-center justify-between text-emerald-300 press-font text-[10px] mb-2"><div>Score: {score}</div><div>Level: {level}</div></div>
+          <div className="mx-auto w-[min(72vw,168px)] bg-zinc-900/70 p-2 rounded border border-emerald-400/40 no-touch-scroll select-none" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+            <div className="grid grid-cols-10 gap-[1px]">
+              {view.map((row,y)=> row.map((v,x)=> (<div key={`${y}-${x}`} className={`${cellCls} ${COLORS[v]||COLORS[0]} rounded-sm`}></div>)))}
+            </div>
+          </div>
+
+          {isMobile && (
+            <div className="mt-3 grid grid-cols-4 gap-2 text-[12px]">
+              <button className="py-2 rounded bg-emerald-700/70 text-white press-font text-[10px] no-touch-scroll" {...hold(goLeft)}>◀</button>
+              <button className="py-2 rounded bg-emerald-700/70 text-white press-font text-[10px]" onPointerDown={(e)=>{e.preventDefault(); rotateP();}}>⟳</button>
+              <button className="py-2 rounded bg-emerald-700/70 text-white press-font text-[10px] no-touch-scroll" {...hold(goRight)}>▶</button>
+              <button className="py-2 rounded bg-emerald-700/70 text-white press-font text-[10px] no-touch-scroll" {...hold(goDown)}>▼</button>
+            </div>
+          )}
+
+          <div className="mt-3 flex items-center justify-center gap-2">
+            <button onClick={()=>{ if(running){ setRunning(false); clearAllHolds(); } else { setRunning(true); } }} className="px-3 py-1 bg-blue-600 text-white rounded">{running?'PAUSE':'RESUME'}</button>
+            <button onClick={()=>{ clearAllHolds(); setGrid(emptyGrid.map(r=>r.map(()=>0))); setPiece(randomPiece()); setScore(0); setLevel(1); setRunning(true); }} className="px-3 py-1 bg-slate-700 text-white rounded">RESET</button>
+          </div>
+        </div>
+      );
+    }
+
+    // ================== RENDER ==================
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App/>);
+  </script>
+</body>
+</html>
